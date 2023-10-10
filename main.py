@@ -1,5 +1,5 @@
 #!/usr/bin/python
-
+"""Imports"""
 import sys
 import pickle
 import os
@@ -13,7 +13,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-### 1. Select what features you'll use.
+### 1. Selecting what features we will use.
 
 features_list = ['poi', 'salary', 'total_payments', 'bonus',
                  'restricted_stock_deferred', 'deferred_income', 'total_stock_value', 'expenses',
