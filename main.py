@@ -1,5 +1,9 @@
 #!/usr/bin/python
-"""Imports"""
+"""This is ML project with a goal to detect persons of interest in Enron fraud case.
+I will apply various ML technics in attempt to label POI's from dataset containing
+financial and email information from hundreds od employees. Dataset is a dictionary
+containing Names as keys and all information as values."""
+
 import sys
 import pickle
 import os
@@ -13,17 +17,15 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-### 1. Selecting what features we will use.
 
-features_list = ['poi', 'salary', 'total_payments', 'bonus',
-                 'restricted_stock_deferred', 'deferred_income', 'total_stock_value', 'expenses',
-                 'exercised_stock_options', 'other', 'long_term_incentive', 'restricted_stock', 'director_fees']
 
-### 2. Load the dictionary containing the dataset, flatten dictionary and load it into Pandas.
+### 1. Load the dictionary containing the dataset.
 
 with open("final_project_dataset.pkl", "rb") as data_file:
     data_dict = pickle.load(data_file)
 my_dataset = data_dict
+
+### 2. Flattening the dictionary and loading it into Pandas.
 
 my_dataset_list = []
 for key, value in my_dataset.items():
@@ -39,14 +41,22 @@ temp_col = df['person']
 df.drop('person', axis=1, inplace=True)
 df.insert(0, 'person', temp_col, allow_duplicates=False)
 
-# Explore the data
+### 3. Exploring the data.
+
 df = df.replace('NaN', np.nan)
+df.head()
 df.info()
 
 print(sum(df.poi))
 
+### 4. Selecting what features we will use.
 
-### 3. Remove the outliers
+features_list = ['poi', 'salary', 'total_payments', 'bonus',
+                 'restricted_stock_deferred', 'deferred_income', 'total_stock_value', 'expenses',
+                 'exercised_stock_options', 'other', 'long_term_incentive', 'restricted_stock', 'director_fees']
+
+### 5. Remove the outliers
+
 features_list = ['salary', 'bonus']
 data = featureFormat(my_dataset, features_list, sort_keys = True)
 
@@ -79,7 +89,7 @@ for person in my_dataset:
     if my_dataset[person]['salary'] != 'NaN' and my_dataset[person]['salary'] > 1_000_000:
         print(person)
 
-### 4. Create new feature(s)
+### 6. Create new feature(s)
 
 for person in my_dataset:
     if my_dataset[person]['from_poi_to_this_person'] != 'NaN' and my_dataset[person]['from_this_person_to_poi'] != 'NaN':
@@ -90,7 +100,8 @@ for person in my_dataset:
         my_dataset[person]['to_poi_ratio'] = 'NaN'
 
 
-### Extract features and labels from dataset for local testing
+### 7. Extract features and labels from dataset for local testing
+
 features_list = ['poi', 'salary', 'total_payments', 'bonus',
                  'restricted_stock_deferred', 'deferred_income', 'total_stock_value', 'expenses',
                  'exercised_stock_options', 'other', 'long_term_incentive', 'restricted_stock', 'director_fees',
@@ -98,7 +109,7 @@ features_list = ['poi', 'salary', 'total_payments', 'bonus',
 data = featureFormat(my_dataset, features_list, sort_keys=True)
 labels, features = targetFeatureSplit(data)
 
-### 5. Try a varity of classifiers
+### 8. Try a varity of classifiers
 
 from sklearn.metrics import precision_score, recall_score
 from sklearn.model_selection import train_test_split
@@ -163,7 +174,7 @@ print ('K Neighbors accuracy:', kn_score)
 print ('K Neighbors precision:', kn_precision)
 print ('K Neighbors recall:', kn_recall, '\n')
 
-### 6. Freature Select
+### 9. Using sklearn library for feature selection
 
 from sklearn.feature_selection import SelectKBest, f_classif
 
@@ -176,9 +187,8 @@ print(final_features)
 
 from tester import test_classifier
 
-### 7. Chosing GaussianNB model for cross-validation evaluation technique.
+### 10. Chosing GaussianNB model for cross-validation evaluation technique with pre selceted features.
 from sklearn.metrics import precision_score, recall_score
-
 
 features_list = ['poi', 'salary', 'bonus', 'deferred_income', 'total_stock_value', 'exercised_stock_options' ]
 data = featureFormat(my_dataset, features_list, sort_keys=True)
@@ -198,9 +208,8 @@ print ('GaussianNB recall:', gnb_recall, '\n')
 
 test_classifier(clf, my_dataset, features_list)
 
-print('------------------------------------------------------------------------------------------------------------')
 
-### Creating a pipelines with hyperparametr tuning for preselected algorythms:
+### 11. Creating a pipelines with hyperparametr tuning for preselected algorythms:
 ### GaussianNB, KNeighborsClassifier, DecisionTreeClassifier, DeepForest.
 
 ### GaussianNB
@@ -236,7 +245,7 @@ clf = gs.best_estimator_
 
 test_classifier(clf, my_dataset, features_list)
 
-#  Since GaussianNB does'nt have parameters to tune lets try adding and tuning PCA to the pipeline
+#  Since GaussianNB doesn't have parameters to tune lets try adding and tuning PCA to the pipeline
 #  to see the impact of principal components on precision and recall scores.
 
 pca = PCA()
@@ -382,8 +391,8 @@ gs.fit(features_train, labels_train)
 clf = gs.best_estimator_
 
 test_classifier(clf, my_dataset, features_list)
-    # Hyperparameter tuning.
 
+    # Hyperparameter tuning.
 
 param_grid = {
             'feature_select__k': range(1, 17),
@@ -394,7 +403,6 @@ param_grid = {
             'min_samples_leaf': [1, 2, 4],
             'bootstrap': [True, False]
               }
-
 
 # sss = StratifiedShuffleSplit(10, test_size=0.3, random_state=42)
 # rf_random = RandomizedSearchCV(rf, param_grid, n_iter=100, cv=sss, verbose=2, random_state=42, n_jobs=-1)
@@ -426,10 +434,10 @@ clf = gs.best_estimator_
 test_classifier(clf, my_dataset, features_list)
 
 
-### Task 6: Dump your classifier, dataset, and features_list so anyone can
-### check your results. You do not need to change anything below, but make sure
-### that the version of poi_id.py that you submit can be run on its own and
-### generates the necessary .pkl files for validating your results.
+### 12. Dump your classifier, dataset, and features_list.
 
-dump_classifier_and_data(clf, my_dataset, features_list)
+# from tester import dump_classifier_and_data
+#
+# dump_classifier_and_data(clf, my_dataset, features_list)
+
 
